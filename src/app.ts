@@ -11,7 +11,6 @@ import {
 
 const app = express();
 
-// VULNERABLE: Hardcoded secrets - CodeQL will detect these
 const config = {
     databasePassword: 'SuperSecretDBPassword123!',
     apiKey: 'sk_live_1234567890abcdefghijklmnop',
@@ -22,9 +21,7 @@ const config = {
 // Middleware
 app.use(express.json());
 
-// VULNERABLE: Security misconfiguration - no security headers
 app.use((req, res, next) => {
-    // Missing security headers like CSP, HSTS, etc.
     next();
 });
 
@@ -40,17 +37,14 @@ app.get('/api/v1/health', (req, res) => {
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
     version: 'v1.0.0',
-    // VULNERABLE: Information disclosure - exposing internal info
     secretKey: config.encryptionKey
   };
   res.json(healthData);
 });
 
-// VULNERABLE: SQL Injection - CodeQL will detect this
 app.get('/api/v1/portfolio/user-portfolio', (req, res) => {
     const userId = req.query.userId as string;
     
-    // VULNERABLE: Direct SQL concatenation
     const query = `SELECT * FROM portfolios WHERE user_id = ${userId}`;
     
     // Simulate database query
@@ -58,16 +52,14 @@ app.get('/api/v1/portfolio/user-portfolio', (req, res) => {
     
     res.json({ 
         message: 'Portfolio data fetched',
-        query: query, // VULNERABLE: Exposing query in response
+        query: query,
         userId: userId
     });
 });
 
-// VULNERABLE: Command Injection - CodeQL will detect this
 app.post('/api/v1/admin/clear-cache', (req, res) => {
     const cacheType = req.body.cacheType as string;
     
-    // VULNERABLE: User input in system command
     exec(`redis-cli flush ${cacheType}`, (error, stdout) => {
         if (error) {
             res.status(500).json({ error: 'Cache clearance failed' });
@@ -77,11 +69,9 @@ app.post('/api/v1/admin/clear-cache', (req, res) => {
     });
 });
 
-// VULNERABLE: Path Traversal - CodeQL will detect this
 app.get('/api/v1/portfolio/report', (req, res) => {
     const reportName = req.query.reportName as string;
     
-    // VULNERABLE: No path sanitization
     const filePath = path.join(__dirname, 'reports', reportName);
     
     fs.readFile(filePath, 'utf8', (err, data) => {
@@ -93,11 +83,9 @@ app.get('/api/v1/portfolio/report', (req, res) => {
     });
 });
 
-// VULNERABLE: Unsafe deserialization simulation
 app.post('/api/v1/portfolio/import', (req, res) => {
     const portfolioData = req.body.data as string;
     
-    // VULNERABLE: Using eval with user input
     try {
         const parsedData = eval(`(${portfolioData})`);
         res.json({ 
@@ -109,12 +97,10 @@ app.post('/api/v1/portfolio/import', (req, res) => {
     }
 });
 
-// VULNERABLE: No rate limiting - brute force vulnerability
 app.post('/api/v1/admin/login', (req, res) => {
     const username = req.body.username as string;
     const password = req.body.password as string;
     
-    // VULNERABLE: No rate limiting, weak credential check
     if (username === 'admin' && password === 'admin123') {
         res.json({ 
             message: 'Login successful',
@@ -136,7 +122,6 @@ app.get('/api/v1/portfolio/performance', (req, res) => {
 
 // Largest holding endpoint
 app.get('/api/v1/portfolio/largest-holding', (req, res) => {
-    // Sample assets data - in real application, this would come from a database
     const sampleAssets: Asset[] = [
         { name: 'Apple Stock', value: 15000, type: 'stock' },
         { name: 'Google Stock', value: 25000, type: 'stock' },
@@ -150,7 +135,6 @@ app.get('/api/v1/portfolio/largest-holding', (req, res) => {
 
 // Asset allocation endpoint
 app.get('/api/v1/portfolio/allocation', (req, res) => {
-    // Sample assets data - in real application, this would come from a database
     const sampleAssets: Asset[] = [
         { name: 'Apple Stock', value: 25000, type: 'stock' },
         { name: 'Google Stock', value: 25000, type: 'stock' },
@@ -161,9 +145,7 @@ app.get('/api/v1/portfolio/allocation', (req, res) => {
     res.json({ allocation: result });
 });
 
-// VULNERABLE: Information disclosure - debug endpoint
 app.get('/api/v1/debug/config', (req, res) => {
-    // VULNERABLE: Exposing all configuration including secrets
     res.json({
         config: config,
         environment: process.env,
@@ -171,11 +153,9 @@ app.get('/api/v1/debug/config', (req, res) => {
     });
 });
 
-// VULNERABLE: No input validation
 app.post('/api/v1/portfolio/calculate', (req, res) => {
     const calculation = req.body.calculation as string;
     
-    // VULNERABLE: Using Function constructor with user input
     try {
         const result = new Function(`return ${calculation}`)();
         res.json({ result: result });
