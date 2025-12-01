@@ -48,7 +48,7 @@ app.get('/api/v1/health', (req, res) => {
 
 // VULNERABLE: SQL Injection - CodeQL will detect this
 app.get('/api/v1/portfolio/user-portfolio', (req, res) => {
-    const userId = req.query.userId;
+    const userId = req.query.userId as string;
     
     // VULNERABLE: Direct SQL concatenation
     const query = `SELECT * FROM portfolios WHERE user_id = ${userId}`;
@@ -65,7 +65,7 @@ app.get('/api/v1/portfolio/user-portfolio', (req, res) => {
 
 // VULNERABLE: Command Injection - CodeQL will detect this
 app.post('/api/v1/admin/clear-cache', (req, res) => {
-    const cacheType = req.body.cacheType;
+    const cacheType = req.body.cacheType as string;
     
     // VULNERABLE: User input in system command
     exec(`redis-cli flush ${cacheType}`, (error, stdout) => {
@@ -79,7 +79,7 @@ app.post('/api/v1/admin/clear-cache', (req, res) => {
 
 // VULNERABLE: Path Traversal - CodeQL will detect this
 app.get('/api/v1/portfolio/report', (req, res) => {
-    const reportName = req.query.reportName;
+    const reportName = req.query.reportName as string;
     
     // VULNERABLE: No path sanitization
     const filePath = path.join(__dirname, 'reports', reportName);
@@ -95,7 +95,7 @@ app.get('/api/v1/portfolio/report', (req, res) => {
 
 // VULNERABLE: Unsafe deserialization simulation
 app.post('/api/v1/portfolio/import', (req, res) => {
-    const portfolioData = req.body.data;
+    const portfolioData = req.body.data as string;
     
     // VULNERABLE: Using eval with user input
     try {
@@ -111,8 +111,8 @@ app.post('/api/v1/portfolio/import', (req, res) => {
 
 // VULNERABLE: No rate limiting - brute force vulnerability
 app.post('/api/v1/admin/login', (req, res) => {
-    const username = req.body.username;
-    const password = req.body.password;
+    const username = req.body.username as string;
+    const password = req.body.password as string;
     
     // VULNERABLE: No rate limiting, weak credential check
     if (username === 'admin' && password === 'admin123') {
@@ -173,7 +173,7 @@ app.get('/api/v1/debug/config', (req, res) => {
 
 // VULNERABLE: No input validation
 app.post('/api/v1/portfolio/calculate', (req, res) => {
-    const calculation = req.body.calculation;
+    const calculation = req.body.calculation as string;
     
     // VULNERABLE: Using Function constructor with user input
     try {
