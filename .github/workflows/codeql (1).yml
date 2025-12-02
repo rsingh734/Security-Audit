@@ -1,4 +1,4 @@
-name: "CodeQL Security Scan"
+name: "CodeQL Security Scan 1"
 
 on:
   push:
